@@ -9,6 +9,7 @@ data_raw/
 data_processed/
 *.parquet
 notebooks/artifacts/
+models/finetuned_transformer/
 
 # OS
 .DS_Store
