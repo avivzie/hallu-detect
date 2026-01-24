@@ -1,6 +1,6 @@
 # hallu-detect
 
-Master's thesis project: hallucination detection / prediction in LLM outputs using HaluEval.
+MSc project: hallucination detection / prediction in LLM outputs using HaluEval.
 
 ## Project structure
 - data_raw/ - raw datasets (not committed)
