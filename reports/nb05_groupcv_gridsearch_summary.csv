@@ -1,0 +1,3 @@
+grid,best_cv_f1,clf__C,clf__class_weight,preprocess__tfidf_resp__analyzer,preprocess__tfidf_resp__max_df,preprocess__tfidf_resp__min_df,preprocess__tfidf_resp__ngram_range,preprocess__tfidf_resp__norm,preprocess__tfidf_resp__sublinear_tf
+word,0.8227033787078412,4.0,balanced,word,0.95,2,"(1, 2)",l2,True
+char_wb,0.8124721139121447,2.0,balanced,char_wb,0.95,2,"(3, 5)",l2,True
