@@ -23,6 +23,7 @@ data_processed/sample.csv     - small sample for quick preview / sharing / noteb
 Unified schema (columns)
 ------------------------
 id       : unique row identifier (string)
+group_id : identifier used to keep paired examples together during train/val/test splitting (string)
 task     : which HaluEval subset this came from (qa/dialogue/summarization/general)
 prompt   : the user input / question / dialogue history / document (string)
 response : the model output (string)
@@ -49,7 +50,7 @@ from pathlib import Path
 
 import pandas as pd
 from datasets import load_dataset
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GroupShuffleSplit
 from tqdm import tqdm
 
 
@@ -57,7 +58,15 @@ from tqdm import tqdm
 # Helper functions
 # -----------------------------
 
-def _row(row_id: str, task: str, prompt: str, response: str, label: int, context: str = "") -> dict:
+def _row(
+    row_id: str,
+    task: str,
+    prompt: str,
+    response: str,
+    label: int,
+    context: str = "",
+    group_id: str = "",
+) -> dict:
     """
     Create a single row in the unified schema.
 
@@ -65,6 +74,7 @@ def _row(row_id: str, task: str, prompt: str, response: str, label: int, context
     """
     return {
         "id": row_id,
+        "group_id": group_id,
         "task": task,
         "prompt": prompt or "",
         "response": response or "",
@@ -98,8 +108,9 @@ def _build_pair_rows(
         hall = ex.get(hall_col, "")
 
         # WHY: We want a supervised dataset with explicit labels for each output candidate.
-        rows.append(_row(f"{task}_{i}_gt", task, prompt, right, 0, context))
-        rows.append(_row(f"{task}_{i}_hall", task, prompt, hall, 1, context))
+        gid = f"{task}_{i}"
+        rows.append(_row(f"{task}_{i}_gt", task, prompt, right, 0, context, group_id=gid))
+        rows.append(_row(f"{task}_{i}_hall", task, prompt, hall, 1, context, group_id=gid))
 
     return rows
 
@@ -173,7 +184,7 @@ def build_halueval(out_csv: Path, seed: int = 42, sample_size: int = 200) -> Non
         raw = (ex.get("hallucination_label") or ex.get("label") or "").strip().lower()
         label = 1 if raw in {"yes", "y", "hallucination", "hallucinated", "true", "1"} else 0
 
-        rows.append(_row(f"general_{i}", "general", prompt, response, label, ""))
+        rows.append(_row(f"general_{i}", "general", prompt, response, label, "", group_id=f"general_{i}"))
 
     # 3) Build DataFrame (pre-clean)
     df = pd.DataFrame(rows)
@@ -198,17 +209,36 @@ def build_halueval(out_csv: Path, seed: int = 42, sample_size: int = 200) -> Non
     print("[Stats] Label counts:", df["label"].value_counts().to_dict())
     print("[Stats] Task counts:", df["task"].value_counts().to_dict())
 
-    # 6) Create splits (stratified by label)
-    # WHY: Stratification ensures label ratio stays similar across train/val/test.
-    train_df, temp_df = train_test_split(
-        df, test_size=0.2, random_state=seed, stratify=df["label"]
-    )
-    val_df, test_df = train_test_split(
-        temp_df, test_size=0.5, random_state=seed, stratify=temp_df["label"]
-    )
+    # 6) Create splits (GROUP-AWARE to prevent leakage between paired rows)
+    # WHY: In qa/dialogue/summarization, each original example is expanded into two rows
+    # (gt + hallucinated) that share the same prompt/context. We must keep those pairs
+    # in the same split; otherwise, prompts leak across train/val/test.
+
+    gss = GroupShuffleSplit(n_splits=1, test_size=0.2, random_state=seed)
+    train_idx, temp_idx = next(gss.split(df, groups=df["group_id"]))
+    train_df = df.iloc[train_idx].reset_index(drop=True)
+    temp_df = df.iloc[temp_idx].reset_index(drop=True)
+
+    gss2 = GroupShuffleSplit(n_splits=1, test_size=0.5, random_state=seed)
+    val_idx, test_idx = next(gss2.split(temp_df, groups=temp_df["group_id"]))
+    val_df = temp_df.iloc[val_idx].reset_index(drop=True)
+    test_df = temp_df.iloc[test_idx].reset_index(drop=True)
+
+    def _check_no_group_overlap(a: pd.DataFrame, b: pd.DataFrame, name_a: str, name_b: str) -> None:
+        inter = set(a["group_id"]).intersection(set(b["group_id"]))
+        if inter:
+            raise RuntimeError(
+                f"Group leakage between {name_a} and {name_b}: {len(inter)} overlapping group_ids"
+            )
+
+    _check_no_group_overlap(train_df, val_df, "train", "val")
+    _check_no_group_overlap(train_df, test_df, "train", "test")
+    _check_no_group_overlap(val_df, test_df, "val", "test")
+    print("[OK] No group overlap across splits.")
 
     print("\n[Splits]")
     print("Train/Val/Test shapes:", train_df.shape, val_df.shape, test_df.shape)
+    print("Unique group_ids:", train_df["group_id"].nunique(), val_df["group_id"].nunique(), test_df["group_id"].nunique())
 
     # 7) Save outputs
     out_csv.parent.mkdir(parents=True, exist_ok=True)
