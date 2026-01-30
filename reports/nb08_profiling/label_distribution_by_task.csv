@@ -1,0 +1,13 @@
+split,task,n_total,n_hallucination,n_non_hallucination,pct_hallucination
+train,dialogue,16020,8010,8010,50.0
+train,general,3563,0,3563,0.0
+train,qa,16010,8005,8005,50.0
+train,summarization,16054,8027,8027,50.0
+val,dialogue,1938,969,969,50.0
+val,general,477,0,477,0.0
+val,qa,2008,1004,1004,50.0
+val,summarization,2002,1001,1001,50.0
+test,dialogue,2042,1021,1021,50.0
+test,general,467,0,467,0.0
+test,qa,1982,991,991,50.0
+test,summarization,1944,972,972,50.0

@@ -1,0 +1,11 @@
+feature,corr_with_label
+resp_numbers_per_word,-0.13411544848539778
+resp_n_numbers,-0.10170915907489782
+resp_n_chars,0.06698990248101447
+resp_n_words,0.06629069596448234
+resp_n_punct,-0.04706833649731381
+resp_has_ellipsis,-0.02516812455005712
+resp_n_uncertainty,-0.021031713286137895
+resp_punct_per_word,0.017356631936937286
+resp_has_multi_excl,-0.009106864530149647
+resp_has_multi_q,-0.004106511801075772
