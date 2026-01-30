@@ -56,6 +56,7 @@ The `load_splits()` function validates that all splits contain required columns 
 ### `src/utils/`
 - `eval.py`: Binary classification evaluation utilities (`evaluate_split()` returns accuracy, F1, precision, recall)
 - `experiment.py`: Experiment reproducibility utilities (random seeds, output directories, metrics saving, predictions export)
+- `error_analysis.py`: Error analysis utilities (extract top errors, generate reports)
 
 ## Model Patterns
 
@@ -181,12 +182,12 @@ from src.utils.experiment import save_metrics_csv, save_markdown_table
 
 # Save as CSV
 metrics_list = [train_metrics.as_dict(), val_metrics.as_dict(), test_metrics.as_dict()]
-save_metrics_csv(run_dir / "metrics.csv", metrics_list)
+save_metrics_csv(run_dir / "metrics.csv", metrics_list, verbose=True)
 
 # Save as markdown table
 import pandas as pd
 df = pd.DataFrame(metrics_list)
-save_markdown_table(run_dir / "summary.md", df)
+save_markdown_table(run_dir / "summary.md", df, verbose=True)
 ```
 
 **Save predictions for error analysis:**
@@ -197,16 +198,62 @@ from src.utils.experiment import get_model_scores, save_predictions_csv
 scores = get_model_scores(model, X_val)
 y_pred = (scores >= 0.5).astype(int)
 
-# Save with metadata and error flags
+# Save with metadata and error flags (preserves original row order)
 save_predictions_csv(
     path=run_dir / "predictions_val.csv",
     df=val_df,
     y_true=y_val,
     y_pred=y_pred,
     scores=scores,
-    split="val"
+    split="val",
+    verbose=True
 )
 # Output includes: id, task, group_id, y_true, y_pred, score, correct, fp, fn
+```
+
+## Error Analysis Utilities (src/utils/error_analysis.py)
+
+Extract and analyze high-confidence errors:
+
+**Extract top errors:**
+```python
+from src.utils.error_analysis import extract_top_errors
+
+# Load predictions
+df_pred = pd.read_csv(run_dir / "predictions_val.csv")
+
+# Get top false positives and false negatives by confidence
+top_fp = extract_top_errors(df_pred, kind="fp", top_k=20)
+top_fn = extract_top_errors(df_pred, kind="fn", top_k=20)
+
+# Save separate files (sorted by confidence)
+top_fp.to_csv(run_dir / "top_fp.csv", index=False)
+top_fn.to_csv(run_dir / "top_fn.csv", index=False)
+```
+
+**Generate error report:**
+```python
+from src.utils.error_analysis import generate_error_report
+
+# Create markdown report with error counts and thematic analysis placeholders
+generate_error_report(
+    fp_df=top_fp,
+    fn_df=top_fn,
+    output_path=run_dir / "error_report.md",
+    top_n=10
+)
+# Report includes: summary stats, top-10 tables, theme placeholders
+```
+
+**Manual error analysis:**
+```python
+from src.utils.error_analysis import add_error_flags, compute_confidence
+
+# Add error flags to custom predictions
+df_with_flags = add_error_flags(df_predictions)
+
+# Compute confidence from scores
+df_with_flags["confidence"] = compute_confidence(df_with_flags["score"])
 ```
 
 ## Important Notes
