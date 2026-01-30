@@ -1,0 +1,7 @@
+model_name,text_input,numeric_features,setting,split,f1,roc_auc
+TF-IDF + LogReg,response-only,yes,baseline,test,0.8152616990053807,0.9052245609346632
+TF-IDF + LogReg,response-only,no,input_ablation,test,0.8114152202937249,0.9002481504758695
+TF-IDF + LogReg,prompt+response,no,baseline,test,0.6241975308641975,0.7125410185336962
+TF-IDF + LogReg,response-only,yes,baseline,val,0.8219809147745969,0.9115394853533092
+TF-IDF + LogReg,response-only,no,input_ablation,val,0.8133761188988347,0.9027814613543398
+TF-IDF + LogReg,prompt+response,no,baseline,val,0.6238887990948764,0.712723737084287
