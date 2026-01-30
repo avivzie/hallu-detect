@@ -201,9 +201,8 @@ def plot_confusion_matrix(
         save_path = Path(save_path)
         save_path.parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(save_path, dpi=150, bbox_inches='tight')
-        plt.close()
-    else:
-        plt.show()
+
+    plt.show()
 
 
 def plot_pr_curve(
@@ -245,6 +244,5 @@ def plot_pr_curve(
         save_path = Path(save_path)
         save_path.parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(save_path, dpi=150, bbox_inches='tight')
-        plt.close()
-    else:
-        plt.show()
+
+    plt.show()
