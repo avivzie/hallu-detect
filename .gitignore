@@ -18,3 +18,6 @@ models/finetuned_transformer/
 # Model checkpoints and large model artifacts
 reports/nb06_transformer/model_checkpoints/
 reports/nb06_transformer/best_model/
+
+# Large prediction CSVs (regenerable from notebooks)
+reports/nb04_embeddings/predictions_*.csv
