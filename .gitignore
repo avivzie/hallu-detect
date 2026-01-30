@@ -13,3 +13,4 @@ models/finetuned_transformer/
 
 # OS
 .DS_Store
+.claude/
