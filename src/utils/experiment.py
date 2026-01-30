@@ -86,7 +86,8 @@ def make_run_dir(
 
 def save_metrics_csv(
     path: Path | str,
-    metrics_dicts: List[Dict[str, Any]]
+    metrics_dicts: List[Dict[str, Any]],
+    verbose: bool = False
 ) -> None:
     """
     Save metrics dictionaries to CSV.
@@ -94,6 +95,7 @@ def save_metrics_csv(
     Args:
         path: Output CSV path
         metrics_dicts: List of metric dictionaries (e.g., from SplitMetrics.as_dict())
+        verbose: If True, print confirmation message
 
     Example:
         metrics = [
@@ -101,18 +103,20 @@ def save_metrics_csv(
             {"split": "val", "accuracy": 0.90, "f1": 0.89},
             {"split": "test", "accuracy": 0.91, "f1": 0.90},
         ]
-        save_metrics_csv(Path("reports/metrics.csv"), metrics)
+        save_metrics_csv(Path("reports/metrics.csv"), metrics, verbose=True)
     """
     path = Path(path)
     df = pd.DataFrame(metrics_dicts)
     df.to_csv(path, index=False)
-    print(f"Saved metrics to: {path}")
+    if verbose:
+        print(f"Saved metrics to: {path}")
 
 
 def save_markdown_table(
     path: Path | str,
     df: pd.DataFrame,
-    float_format: str = ".4f"
+    float_format: str = ".4f",
+    verbose: bool = False
 ) -> None:
     """
     Save DataFrame as markdown table.
@@ -121,9 +125,10 @@ def save_markdown_table(
         path: Output markdown path
         df: DataFrame to save
         float_format: Format string for floating point numbers
+        verbose: If True, print confirmation message
 
     Example:
-        save_markdown_table(Path("reports/results.md"), results_df)
+        save_markdown_table(Path("reports/results.md"), results_df, verbose=True)
     """
     path = Path(path)
 
@@ -138,7 +143,8 @@ def save_markdown_table(
 
     md_table = df_formatted.to_markdown(index=False)
     path.write_text(md_table, encoding="utf-8")
-    print(f"Saved markdown table to: {path}")
+    if verbose:
+        print(f"Saved markdown table to: {path}")
 
 
 def get_model_scores(model, X) -> np.ndarray:
@@ -183,10 +189,13 @@ def save_predictions_csv(
     y_pred: np.ndarray,
     scores: np.ndarray,
     split: str,
-    id_cols: Optional[List[str]] = None
+    id_cols: Optional[List[str]] = None,
+    verbose: bool = False
 ) -> None:
     """
     Save predictions with metadata for error analysis.
+
+    Preserves original row order (does not sort by score).
 
     Args:
         path: Output CSV path
@@ -196,6 +205,7 @@ def save_predictions_csv(
         scores: Model confidence scores (from get_model_scores or predict_proba)
         split: Split name (e.g., "train", "val", "test")
         id_cols: Columns to include from df (default: ["id", "task", "group_id"])
+        verbose: If True, print summary statistics
 
     Example:
         scores = get_model_scores(model, X_val)
@@ -207,7 +217,8 @@ def save_predictions_csv(
             y_true=y_val,
             y_pred=y_pred,
             scores=scores,
-            split="val"
+            split="val",
+            verbose=True
         )
     """
     path = Path(path)
@@ -235,10 +246,10 @@ def save_predictions_csv(
     pred_df["fp"] = ((pred_df["y_true"] == 0) & (pred_df["y_pred"] == 1)).astype(int)
     pred_df["fn"] = ((pred_df["y_true"] == 1) & (pred_df["y_pred"] == 0)).astype(int)
 
-    # Sort by score descending (most confident predictions first)
-    pred_df = pred_df.sort_values("score", ascending=False).reset_index(drop=True)
-
+    # Keep original row order (do not sort)
     pred_df.to_csv(path, index=False)
-    print(f"Saved predictions to: {path}")
-    print(f"  Total: {len(pred_df)}, Correct: {pred_df['correct'].sum()}, "
-          f"FP: {pred_df['fp'].sum()}, FN: {pred_df['fn'].sum()}")
+
+    if verbose:
+        print(f"Saved predictions to: {path}")
+        print(f"  Total: {len(pred_df)}, Correct: {pred_df['correct'].sum()}, "
+              f"FP: {pred_df['fp'].sum()}, FN: {pred_df['fn'].sum()}")
