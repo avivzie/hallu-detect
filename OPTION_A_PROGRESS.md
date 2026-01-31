@@ -11,15 +11,45 @@
 
 | Priority | Task | Status | Time Est | Actual Time | Points |
 |----------|------|--------|----------|-------------|--------|
-| **#1** | TruthfulQA Integration | 🟡 In Progress | 2-3 days | 0.5 days | +8 |
+| **#1** | TruthfulQA Integration | 🟢 Complete | 2-3 days | 1.5 days | +8 |
 | **#2** | Custom Dataset Creation | ⚪ Not Started | 2-4 hours | - | +4 |
 | **#3** | Sentiment Integration | ⚪ Not Started | 2-4 hours | - | +3 |
 
-**Score Projection:** 63/75 (84%) → 68.5/75 (91.3%)
+**Current Score:** 71/75 (95%) with baseline complete
+**Target Score:** 73/75 (97%) with multi-dataset training
 
 ---
 
-## ✅ COMPLETED TASKS (Day 1 - January 30)
+## ✅ COMPLETED TASKS
+
+### Day 2 - January 31: Multi-Dataset Training Implemented ⏰ 1.5 days total
+
+**TruthfulQA Baseline Complete:**
+- ✅ NB12 executed successfully
+- ✅ Cross-dataset validation results documented
+- ✅ Domain shift analysis completed (F1: 0.815 → 0.377, -54% drop)
+- ✅ Improvement plan created with 4 options
+
+**Option C (Multi-Dataset Training) Chosen:**
+- ✅ Created `notebooks/13_multi_dataset_training.ipynb`
+  - Complete pipeline for training on HaluEval + TruthfulQA combined
+  - Group-aware TruthfulQA splitting (80% train, 20% test)
+  - Dataset source tracking ('halueval' vs 'truthfulqa')
+  - Baseline vs multi-dataset comparison logic
+  - Comprehensive evaluation and visualization
+
+- ✅ Created `reports/nb13_multi_dataset/` directory structure
+- ✅ Committed baseline results with publication-oriented message
+
+**What's Next:**
+- 🔲 Execute NB13 to train multi-dataset model
+- 🔲 Evaluate results (expect: TruthfulQA F1 → 0.65-0.75)
+- 🔲 Document improvements in analysis file
+- 🔲 Update final report
+
+---
+
+### Day 1 - January 30: Foundation Built
 
 ### Priority 1: TruthfulQA - Foundation Built ⏰ 1 hour
 
