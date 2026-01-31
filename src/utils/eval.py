@@ -246,3 +246,59 @@ def plot_pr_curve(
         plt.savefig(save_path, dpi=150, bbox_inches='tight')
 
     plt.show()
+
+
+def plot_roc_curve(
+    y_true: np.ndarray,
+    y_scores: np.ndarray,
+    save_path: Optional[Path | str] = None,
+    title: str = "ROC Curve",
+    label: Optional[str] = None
+) -> float:
+    """
+    Generate ROC curve using matplotlib and return AUC score.
+
+    Args:
+        y_true: True binary labels
+        y_scores: Target scores (e.g., predict_proba[:, 1])
+        save_path: If provided, save figure to this path
+        title: Plot title
+        label: Label for the ROC curve (default: 'ROC curve (AUC = {auc:.3f})')
+
+    Returns:
+        AUC score
+
+    Example:
+        scores = model.predict_proba(X_val)[:, 1]
+        auc_score = plot_roc_curve(y_val, scores, save_path="reports/roc_val.png")
+    """
+    import matplotlib.pyplot as plt
+    from sklearn.metrics import roc_curve, auc
+
+    fpr, tpr, _ = roc_curve(y_true, y_scores)
+    roc_auc = auc(fpr, tpr)
+
+    if label is None:
+        label = f'ROC curve (AUC = {roc_auc:.3f})'
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    ax.plot(fpr, tpr, linewidth=2, label=label)
+    ax.plot([0, 1], [0, 1], 'k--', linewidth=1, label='Random (AUC = 0.5)')
+    ax.set_xlabel('False Positive Rate')
+    ax.set_ylabel('True Positive Rate')
+    ax.set_title(title)
+    ax.set_xlim([0.0, 1.0])
+    ax.set_ylim([0.0, 1.05])
+    ax.grid(True, alpha=0.3)
+    ax.legend(loc="lower right")
+
+    fig.tight_layout()
+
+    if save_path is not None:
+        save_path = Path(save_path)
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(save_path, dpi=150, bbox_inches='tight')
+
+    plt.show()
+
+    return roc_auc
