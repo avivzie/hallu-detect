@@ -344,34 +344,5 @@ After running all notebooks, you'll find:
 
 ---
 
-## Citation
-
-If you use this code or methodology in your research, please cite:
-
-```bibtex
-@mastersthesis{gross2026hallucination,
-  title={Hallucination Detection in Large Language Model Outputs: A Multi-Dataset Machine Learning Approach},
-  author={Gross, Aviv},
-  year={2026},
-  school={[Your University]},
-  type={MSc Thesis}
-}
-```
-
----
-
-## License
-
-This project is submitted as part of a Master's thesis in Information Systems.
-
----
-
-## Contact
-
-For questions or issues:
-- Open an issue on GitHub
-- Contact: [Your Email]
-
----
 
 **Last Updated:** January 31, 2026
