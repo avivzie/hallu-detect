@@ -105,3 +105,80 @@ def add_numeric_feature_columns(
 def get_numeric_feature_cols(df: pd.DataFrame, prefix: str = "resp_") -> List[str]:
     """Return engineered numeric feature columns by prefix."""
     return [c for c in df.columns if c.startswith(prefix)]
+
+
+# ============================================================================
+# Sentiment Features (vaderSentiment)
+# ============================================================================
+
+def sentiment_features(text: str) -> Dict[str, float]:
+    """
+    Extract sentiment features using VADER sentiment analyzer.
+
+    Returns:
+        Dictionary with sentiment scores:
+        - resp_sent_compound: compound score [-1, 1]
+        - resp_sent_positive: positive score [0, 1]
+        - resp_sent_negative: negative score [0, 1]
+        - resp_sent_neutral: neutral score [0, 1]
+    """
+    try:
+        from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+    except ImportError:
+        raise ImportError(
+            "vaderSentiment not installed. "
+            "Install with: pip install vaderSentiment"
+        )
+
+    # Initialize analyzer (note: creating analyzer each time is fine for small datasets)
+    analyzer = SentimentIntensityAnalyzer()
+
+    t = safe_text(text).strip()
+    if not t:
+        # Return neutral scores for empty text
+        return {
+            "resp_sent_compound": 0.0,
+            "resp_sent_positive": 0.0,
+            "resp_sent_negative": 0.0,
+            "resp_sent_neutral": 1.0,
+        }
+
+    # Get sentiment scores
+    scores = analyzer.polarity_scores(t)
+
+    return {
+        "resp_sent_compound": float(scores["compound"]),
+        "resp_sent_positive": float(scores["pos"]),
+        "resp_sent_negative": float(scores["neg"]),
+        "resp_sent_neutral": float(scores["neu"]),
+    }
+
+
+def add_sentiment_features(
+    df: pd.DataFrame,
+    response_col: str = "response"
+) -> pd.DataFrame:
+    """
+    Add sentiment feature columns to a copy of df using VADER.
+
+    Args:
+        df: Input dataframe
+        response_col: Name of column containing text to analyze
+
+    Returns:
+        Dataframe with 4 additional sentiment columns:
+        - resp_sent_compound: overall sentiment [-1, 1]
+        - resp_sent_positive: positive sentiment [0, 1]
+        - resp_sent_negative: negative sentiment [0, 1]
+        - resp_sent_neutral: neutral sentiment [0, 1]
+    """
+    out = df.copy()
+    sent_feats = out[response_col].apply(sentiment_features)
+    sent_df = pd.DataFrame(list(sent_feats))
+    out = pd.concat([out.reset_index(drop=True), sent_df.reset_index(drop=True)], axis=1)
+    return out
+
+
+def get_sentiment_feature_cols(df: pd.DataFrame) -> List[str]:
+    """Return sentiment feature columns."""
+    return [c for c in df.columns if c.startswith("resp_sent_")]
